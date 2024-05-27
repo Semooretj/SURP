@@ -1,8 +1,9 @@
 import numpy as np
 import healpy as hp
 
+
 def turn(nside:int,pixel_data:list) -> list:
-    """ Shifts each pixel to position of ring neighbour (left)
+    """ Shifts eachjjjjj pixel to position of ring neighbour (left)
     Parameters:
     nside -------- resolution of data set
     pixel_data --- data value for each pixel

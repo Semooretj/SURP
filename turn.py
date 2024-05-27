@@ -1,7 +1,6 @@
 import numpy as np
 import healpy as hp
 
-
 def turn(nside:int,pixel_data:list) -> list:
     """ Shifts each pixel to position of ring neighbour (left)
     Parameters:
@@ -17,9 +16,9 @@ def turn(nside:int,pixel_data:list) -> list:
     n_rings = 4*nside -1  # determined emperically
     
     # create empty lists for each ring
-    ring_indices =[]
+    indices =[]
     for i in range(n_rings): 
-        ring_indices.append([])
+        indices.append([])
 
     # set first pixel's colatitude as initial test
     colat0,long0 = hp.pix2ang(nside,0)
