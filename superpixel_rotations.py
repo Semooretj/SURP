@@ -23,8 +23,12 @@ def get_unique_positions(lower_res,higher_res):
 
 def generate_maps(data,positions):
     """ """
-    for i in range(len(pos)):
+    # Convert data to ringed order to use function
+    ringed_data = hp.reorder(data,n2r=True)
+    
+    for i in range(len(positions)):
         # Rotate center to each position
         rotate = hp.Rotator(positions[i],inv = True)
-        rotate_pixel = rotate.rotate_map_pixel(data)    
-        hp.mollview(rotate_pixel)
+        rotate_pixel = rotate.rotate_map_pixel(ringed_data)    
+        hp.mollview(rotate_pixel, title='Rotated to position '+str(positions[i]), unit='MJy/sr')
+        
