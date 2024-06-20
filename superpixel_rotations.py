@@ -4,12 +4,12 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 
 
-def get_unique_positions(lower_res,higher_res):
+def get_unique_positions(lower_nside,higher_nside):
     """ """
     # Get resolution in degrees
-    res = hp.nside2resol(higher_res)*u.rad.to(u.deg)
+    res = hp.nside2resol(higher_nside)*u.rad.to(u.deg)
     # Number of pixels in each side of superpixel
-    side_pixels = higher_res/lower_res
+    side_pixels = higher_nside/lower_nside
     # Set indices for pixels in the superpixel
     x = np.arange(0,side_pixels,1)
     y = np.arange(0,side_pixels,1)
