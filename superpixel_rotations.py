@@ -30,13 +30,14 @@ def get_unique_positions(lower_nside,higher_nside):
     return np.array(vec_rot)
 
 
-def generate_maps(data,positions,lower_nside,higher_nside):
+def generate_maps(data,positions,lower_nside,higher_nside,plank = None):
     """ Create new maps as hdf5 files for each shift position
     Parameters:
     data ------------ the data array, array-like
     positions ------- the positions for the superpixel shifts, array of position arrays [long,lat]
     lower_nside ----- resolution of the superpixels, int
     higher_nside ---- resolution of the data pixels, int
+    plank ----------- the plank frequency, str
     
     Returns:
     Visualises each map, saves each new map as an hdf5 file
@@ -49,14 +50,20 @@ def generate_maps(data,positions,lower_nside,higher_nside):
         rotate = hp.Rotator(positions[i],inv = True)
         rotate_pixel = rotate.rotate_map_pixel(ringed_data)    
         
+        # Set file name
+        if plank is None:
+            filename = 'shift_'+str(int(lower_nside))+'_'+str(int(higher_nside))+'_'+str(i)+'.h5'
+        else:
+            filename = str(plank)+'_shift_'+str(int(lower_nside))+'_'+str(int(higher_nside))+'_'+str(i)+'.h5'
         # Create an HDF5 file
-        filename = 'shift_'+str(int(lower_nside))+'_'+str(int(higher_nside))+'_'+str(i)+'.h5'
-        with h5py.File(filename, 'w') as hdf:
+        with h5py.File('rotated_maps/'+filename, 'w') as hdf:
             # Create a dataset in the file
             hdf.create_dataset('shifted', data=rotate_pixel)
             # Add metadata
             hdf['shifted'].attrs['position'] = positions[i]
             hdf['shifted'].attrs['ordering'] = 'ringed'
+            if plank is not None:
+                hdf['shifted'].attrs['plank'] = plank
         # View the rotated map            
         hp.mollview(rotate_pixel, title='Rotated to position '+str(positions[i]), unit='MJy/sr')
 
@@ -94,12 +101,13 @@ def test_data(lower_nside, higher_nside,  location):
     return high_res_map
 
 
-def shift_maps(data,lower_nside,higher_nside):
+def shift_maps(data,lower_nside,higher_nside,plank = None):
     """ Perform shifts and generate map files
     Parameters:
     data ------------ the data array, array-like
     lower_nside ----- resolution of the superpixels, int
     higher_nside ---- resolution of the data pixels, int
+    plank ----------- the plank frequency, str
     
     Returns:
     Visualises each map, saves each new map as an hdf5 file
@@ -107,7 +115,7 @@ def shift_maps(data,lower_nside,higher_nside):
     # Get shift positions
     positions = get_unique_positions(lower_nside, higher_nside)
     # Generate maps in hdf5 file
-    generate_maps(data, positions, lower_nside, higher_nside)
+    generate_maps(data, positions, lower_nside, higher_nside,plank)
     
     
 def shift_back_neg(filename):
