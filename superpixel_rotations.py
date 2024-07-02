@@ -3,6 +3,7 @@ import healpy as hp
 import astropy.units as u
 import matplotlib.pyplot as plt
 import h5py
+from scipy.spatial.transform import Rotation as rot
 
 
 def get_unique_positions(lower_nside,higher_nside):
@@ -62,6 +63,8 @@ def generate_maps(data,positions,lower_nside,higher_nside,plank = None):
             # Add metadata
             hdf['shifted'].attrs['position'] = positions[i]
             hdf['shifted'].attrs['ordering'] = 'ringed'
+            hdf['shifted'].attrs['lower_nside'] = lower_nside
+            hdf['shifted'].attrs['higher_nside'] = higher_nside
             if plank is not None:
                 hdf['shifted'].attrs['plank'] = plank
         # View the rotated map            
@@ -164,3 +167,48 @@ def shift_back(filename):
     rotate = hp.Rotator(position)
     rotate_pixel = rotate.rotate_map_pixel(data)
     hp.mollview(rotate_pixel, title='Rotated back without inv', unit='MJy/sr')
+    
+def unrotate_superpixels (file):
+    """Get angular positions of each superpixel after rotating back by the same amount as the rotated map
+    Parameters:
+    file -------- the name of the hdf5 map file, string
+    
+    Returns:
+    angles ----------- the angular positions of each superpixel after rotating back, array of position arrays [long,lat]
+    """
+    # Read the HDF5 file
+    with h5py.File(file, 'r') as hdf:
+    # Access the dataset
+        for dset in hdf:
+            data = hdf[dset][:]
+            #hp.mollview(data, title='Test map')
+            # Access metadata
+            position = hdf[dset].attrs['position']
+            ordering = hdf[dset].attrs['ordering']
+            higher_nside = hdf[dset].attrs['higher_nside']
+            lower_nside = hdf[dset].attrs['lower_nside'] 
+ 
+    
+    # Number of superpixels
+    npix = hp.nside2npix(lower_nside)
+    # Get the current superpixel position vectors
+    vecs = []
+    for i in range(npix):
+        vec = hp.pix2vec(lower_nside,i,nest =False)
+        vecs.append(vec)
+    # List of position vectors
+    vecs = np.array(vecs)
+    # Set the rotation object
+    r = rot.from_euler('zy', position, degrees=True)
+    # Convert to 3x3 rotation matrix
+    rot_matrix = r.as_matrix()
+    # Get inverse
+    rot_matrix_inv = np.linalg.inv(rot_matrix)
+    # Rotate the superpixels back
+    vecs_rotated = np.dot(rot_matrix_inv, vecs.T).T
+    # Convert to longitude and latitude
+    angles = hp.vec2ang(vecs_rotated, lonlat=True)
+    angles = np.array(angles).T
+    
+    
+    return angles
