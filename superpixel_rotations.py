@@ -168,7 +168,51 @@ def shift_back(filename):
     rotate_pixel = rotate.rotate_map_pixel(data)
     hp.mollview(rotate_pixel, title='Rotated back without inv', unit='MJy/sr')
     
-def unrotate_superpixels (file):
+    
+    
+def get_position_vectors(nside):
+    """Get the position vectors of the superpixels
+    Parameters:
+    nside: int, the nside of the superpixels
+    
+    Returns:
+    vecs: array, the position vectors of the superpixels
+    """
+    # Number of superpixels
+    npix = hp.nside2npix(nside)
+    # Get the current superpixel position vectors
+    vecs = []
+    for i in range(npix):
+        vec = hp.pix2vec(nside,i,nest =False)
+        vecs.append(vec)
+    return np.array(vecs )
+
+
+def unrotate_superpixels (vector, euler_angle):
+    """Get angular positions of the superpixel after rotating back by the same angle
+    Parameters:
+    vector: array, the position vectors of the superpixels
+    euler_angle: float, the angle by which the superpixels were rotated
+    
+    Reurns:
+    angles: array, the angular positions of the superpixel after rotating back
+    """   
+    # Set the rotation object
+    r = rot.from_euler('zy', euler_angle, degrees=True)
+    # Convert to 3x3 rotation matrix
+    rot_matrix = r.as_matrix()
+    # Get inverse
+    rot_matrix_inv = np.linalg.inv(rot_matrix)
+    # Rotate the superpixels back
+    vec_rotated = np.dot(rot_matrix_inv, vector.T).T
+    # Convert to longitude and latitude
+    angles = hp.vec2ang(vec_rotated, lonlat=True)
+    angles = np.array(angles).T
+    
+    return angles
+
+    
+def unrotate_superpixels_file (file):
     """Get angular positions of each superpixel after rotating back by the same amount as the rotated map
     Parameters:
     file -------- the name of the hdf5 map file, string
