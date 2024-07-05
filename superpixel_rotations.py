@@ -5,6 +5,38 @@ import matplotlib.pyplot as plt
 import h5py
 from scipy.spatial.transform import Rotation as rot
 
+def test_data(lower_nside, higher_nside,  location):
+    """ Create test data with a superpixel highlighted at a given location
+    Parameters:
+    lower_nside -------- resolution of the superpixels, int
+    higher_nside ------- resolution of the data pixels, int
+    location: ---------- location of the superpixel that you want to mark in the higher resolution map, longitude and latitude in degrees, tuple
+    
+    Returns: 
+    high_res_map ------- map of the higher resolution with the superpixel at the desired location marked, numpy array
+    """
+    # Make sure higher_nside is greater than lower_nside
+    if higher_nside < lower_nside:
+        raise ValueError("higher_nside must be greater than lower_nside")
+    
+    # Number of pixels in the map of lower_nside
+    npix1 = hp.nside2npix(lower_nside)
+    
+    # Create an empty map for higher_nside resolution
+    high_res_map = np.zeros(hp.nside2npix(higher_nside))
+
+    # Number of pixels in each superpixel
+    npix_superpixel = (higher_nside// lower_nside)**2
+
+    # Find the index of the superpixel that is at the desired location
+    superpixel_index = hp.ang2pix(int(lower_nside), location[0], location[1], lonlat=True, nest=True) 
+
+    # Find the indices of the pixels in the superpixel
+    high_res_map[superpixel_index * npix_superpixel : (superpixel_index + 1) * npix_superpixel] = 1
+    hp.mollview(high_res_map, title='Superpixel at location '+str(location), nest = True, unit='MJy/sr')
+    
+    return high_res_map
+
 
 def get_unique_positions(lower_nside,higher_nside):
     """Get the positions for the superpixel shifts in the higher resolution map
@@ -71,39 +103,6 @@ def generate_maps(data,positions,lower_nside,higher_nside,plank = None):
         hp.mollview(rotate_pixel, title='Rotated to position '+str(positions[i]), unit='MJy/sr')
 
 
-def test_data(lower_nside, higher_nside,  location):
-    """ Create test data with a superpixel highlighted at a given location
-    Parameters:
-    lower_nside -------- resolution of the superpixels, int
-    higher_nside ------- resolution of the data pixels, int
-    location: ---------- location of the superpixel that you want to mark in the higher resolution map, longitude and latitude in degrees, tuple
-    
-    Returns: 
-    high_res_map ------- map of the higher resolution with the superpixel at the desired location marked, numpy array
-    """
-    # Make sure higher_nside is greater than lower_nside
-    if higher_nside < lower_nside:
-        raise ValueError("higher_nside must be greater than lower_nside")
-    
-    # Number of pixels in the map of lower_nside
-    npix1 = hp.nside2npix(lower_nside)
-    
-    # Create an empty map for higher_nside resolution
-    high_res_map = np.zeros(hp.nside2npix(higher_nside))
-
-    # Number of pixels in each superpixel
-    npix_superpixel = (higher_nside// lower_nside)**2
-
-    # Find the index of the superpixel that is at the desired location
-    superpixel_index = hp.ang2pix(int(lower_nside), location[0], location[1], lonlat=True, nest=True) 
-
-    # Find the indices of the pixels in the superpixel
-    high_res_map[superpixel_index * npix_superpixel : (superpixel_index + 1) * npix_superpixel] = 1
-    hp.mollview(high_res_map, title='Superpixel at location '+str(location), nest = True, unit='MJy/sr')
-    
-    return high_res_map
-
-
 def shift_maps(data,lower_nside,higher_nside,plank = None):
     """ Perform shifts and generate map files
     Parameters:
@@ -121,7 +120,7 @@ def shift_maps(data,lower_nside,higher_nside,plank = None):
     generate_maps(data, positions, lower_nside, higher_nside,plank)
     
     
-def shift_back_neg(filename):
+def shift_back_inv(filename):
     """ Function for shifting map back the opposite direction of original shift
     Parameters:
     filename -------- the name of the hdf5 map file, string
@@ -143,9 +142,10 @@ def shift_back_neg(filename):
     rotate = hp.Rotator(-position,inv = True)
     rotate_pixel = rotate.rotate_map_pixel(data)
     hp.mollview(rotate_pixel, title='Rotated back with inv', unit='MJy/sr')
+    return rotate_pixel
      
      
-def shift_back(filename):
+def shift_back_noinv(filename):
     """ Function for shifting map back the opposite direction of original shift
     Parameters:
     filename -------- the name of the hdf5 map file, string
@@ -167,6 +167,7 @@ def shift_back(filename):
     rotate = hp.Rotator(position)
     rotate_pixel = rotate.rotate_map_pixel(data)
     hp.mollview(rotate_pixel, title='Rotated back without inv', unit='MJy/sr')
+    return rotate_pixel
     
     
     
@@ -181,11 +182,9 @@ def get_position_vectors(nside):
     # Number of superpixels
     npix = hp.nside2npix(nside)
     # Get the current superpixel position vectors
-    vecs = []
-    for i in range(npix):
-        vec = hp.pix2vec(nside,i,nest =False)
-        vecs.append(vec)
-    return np.array(vecs )
+    vecs = hp.pix2vec(nside,range(npix),nest =False)
+    vecs = np.array(vecs).T
+    return vecs
 
 
 def unrotate_superpixels (vector, euler_angle):
@@ -236,12 +235,9 @@ def unrotate_superpixels_file (file):
     # Number of superpixels
     npix = hp.nside2npix(lower_nside)
     # Get the current superpixel position vectors
-    vecs = []
-    for i in range(npix):
-        vec = hp.pix2vec(lower_nside,i,nest =False)
-        vecs.append(vec)
+    vecs = hp.pix2vec(lower_nside,range(npix),nest =False)
     # List of position vectors
-    vecs = np.array(vecs)
+    vecs = np.array(vecs).T
     # Set the rotation object
     r = rot.from_euler('zy', position, degrees=True)
     # Convert to 3x3 rotation matrix
