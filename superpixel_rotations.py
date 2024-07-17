@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import h5py
 from scipy.spatial.transform import Rotation as rot
 
-def test_data(lower_nside, higher_nside,  location):
+def test_data(lower_nside, higher_nside,  location, isPixel = True):
     """ Create test data with a superpixel highlighted at a given location
     Parameters:
     lower_nside -------- resolution of the superpixels, int
     higher_nside ------- resolution of the data pixels, int
     location: ---------- location of the superpixel that you want to mark in the higher resolution map, longitude and latitude in degrees, tuple
+    isPixel: ----------- if True, the data is pixel, if False, the data is superpixel data, boolean
     
     Returns: 
     high_res_map ------- map of the higher resolution with the superpixel at the desired location marked, numpy array
@@ -33,7 +34,12 @@ def test_data(lower_nside, higher_nside,  location):
 
     # Find the indices of the pixels in the superpixel
     high_res_map[superpixel_index * npix_superpixel : (superpixel_index + 1) * npix_superpixel] = 1
-    hp.mollview(high_res_map, title='Superpixel at location '+str(location), nest = True, unit='MJy/sr')
+    
+    if isPixel != True:
+        title = str(npix_superpixel)+' superpixels about location '+str(location)
+    else:
+        title = 'Superpixel at location '+str(location)
+    hp.mollview(high_res_map, title=title, nest = True, unit='MJy/sr')
     
     return high_res_map
 
