@@ -1,6 +1,6 @@
 # SURP
 This repository contains code and figures produced during the SURP 2024 program.
-Supervised by Ioana Zelko and Joshua Speagle, the project aims to create improved versions of 3D Interstellar Medium Dust Temperature Maps from Zelko et al. 2022: https://arxiv.org/abs/2211.07667
+Supervised by Dr Ioana Zelko and Prof. Joshua Speagle, the project aims to create improved versions of 3D Interstellar Medium Dust Temperature Maps from Zelko et al. 2022: https://arxiv.org/abs/2211.07667
 
 Uses data files from dustfizz3d repository: https://github.com/ioanazelko/dustfizz3D/tree/main
 ## Overview
@@ -12,7 +12,7 @@ Uses data files from dustfizz3d repository: https://github.com/ioanazelko/dustfi
 
   To be used with the *compare_plank_rotations* notebook.
   
-  To understand the effect of two rotation methods, this file has functions for generating residual, ratio and histogram plots of a rotated map. These functions were written specifically for evaluation with the Plank emission data.
+  To understand the effect of two rotation methods, this file has functions for generating residual, ratio and histogram plots of a rotated map. These functions were written specifically for evaluation with the Plank emission data.(Update: Now works with any map)
   
 - **superpixel_rotations.py**
 
@@ -23,7 +23,7 @@ Uses data files from dustfizz3d repository: https://github.com/ioanazelko/dustfi
 ## Jupyter notebooks
 - **compare_plank_rotations**
 
-  This notebook uses functions from *comparison_functions.py* to generate residual, ratio and histogram plots of a rotated map. The notebook was written to be run from the dustfizz3d directory.
+  This notebook uses functions from *comparison_functions.py* to generate residual, ratio and histogram plots of a rotated map. The notebook was written to be run from the dustfizz3d directory to access plank data.
   
   *Note: requires a Dropbox access token to save generated figures. Info on how to generate one can be found here: https://help.displayr.com/hc/en-us/articles/360004116315-How-to-Create-an-Access-Token-for-Dropbox*
   
@@ -33,5 +33,5 @@ Uses data files from dustfizz3d repository: https://github.com/ioanazelko/dustfi
   
 - **generate_maps**
 
-  This notebook uses functions from *superpixel_rotations.py* to rotate the plank emission maps. Outputs hdf5 files of rotated maps in *rotated_maps* folder. Also includes some tests for rotating back superpixels of temperature data
+  This notebook uses functions from *superpixel_rotations.py* to rotate the plank emission maps and bayestar reddening maps. Outputs hdf5 files of rotated maps in *rotated_maps* folder. The notebook was written to be run from the dustfizz3d directory to access the data.
  
